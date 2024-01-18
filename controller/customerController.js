@@ -1,6 +1,4 @@
 import { CustomerModel } from "../model/customerModel.js";
-import { customer_db } from "../db/db.js";
-import { setCustomerIds } from "./orderController.js";
 import { setCustomerCount } from "./indexController.js";
 
 //customer form
@@ -130,9 +128,7 @@ customer_btn.eq(2).on('click', () => {
 
     if (validate(customerId, 'customer Id')) {
 
-        const customer = {
-            customerId: customerId
-        }
+        const customer = { customerId: customerId }
 
         Swal.fire({
             title: 'Are you sure?',
@@ -150,7 +146,7 @@ customer_btn.eq(2).on('click', () => {
                     contentType: 'application/json',
                     data: JSON.stringify(customer),
                     success: function (res) {
-                        Swal.fire('Deleted!', 'Your file has been deleted.', 'success');
+                        Swal.fire('Deleted!', 'Your Customer has been deleted.', 'success');
                         customer_btn.eq(3).click();
                         loadCustomerTable();
                     },
@@ -172,27 +168,27 @@ customer_btn.eq(2).on('click', () => {
 );
 
 //customer search
-customer_search.on('input', function () {
-    let option = customer_search_select.find(":selected").text();
-    let searchTerm = customer_search.val().trim().toLowerCase();
-    let matchingCustomers = customer_db.filter(customer => customer[option].toLowerCase() === searchTerm);
+// customer_search.on('input', function () {
+//     let option = customer_search_select.find(":selected").text();
+//     let searchTerm = customer_search.val().trim().toLowerCase();
+//     let matchingCustomers = customer_db.filter(customer => customer[option].toLowerCase() === searchTerm);
 
-    if (matchingCustomers.length > 0) {
-        $('tbody').eq(0).empty();
-        matchingCustomers.forEach(customer => {
-            $('tbody').eq(0).append(
-                `<tr>
-                    <th scope="row">${customer.customer_id}</th>
-                    <td>${customer.name}</td>
-                    <td>${customer.address}</td>
-                    <td>${customer.contact}</td>
-                </tr>`
-            );
-        });
-    } else {
-        loadCustomerTable();
-    }
-});
+//     if (matchingCustomers.length > 0) {
+//         $('tbody').eq(0).empty();
+//         matchingCustomers.forEach(customer => {
+//             $('tbody').eq(0).append(
+//                 `<tr>
+//                     <th scope="row">${customer.customer_id}</th>
+//                     <td>${customer.name}</td>
+//                     <td>${customer.address}</td>
+//                     <td>${customer.contact}</td>
+//                 </tr>`
+//             );
+//         });
+//     } else {
+//         loadCustomerTable();
+//     }
+// });
 
 //load customer
 $('tbody').eq(0).on('click', 'tr', function () {

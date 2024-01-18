@@ -123,4 +123,12 @@ export function setCustomerCount(cnt){
     count.eq(0).text(cnt);
 }
 
+export function setItemCount(cnt){
+    count.eq(1).text(cnt);
+}
+
+export function setOrderCount(cnt){
+    count.eq(2).text(cnt);
+}
+
 setCounts();
