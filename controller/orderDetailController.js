@@ -50,7 +50,7 @@ function loadOrderDetails() {
         $('tbody').eq(4).empty();
         for(let i=0; i<order_details_db.length; i++){
             if (orderId === order_details_db[i].order_id){
-                let total = order_details_db[i].unit_price * order_details_db[i].qty;
+                let total = order_details_db[i].unit_price * order_details_db[i].qty; // TODO
                 let item_index = item_db.findIndex(item => item.item_code === order_details_db[i].item_id);
 
                 $('tbody').eq(4).append(

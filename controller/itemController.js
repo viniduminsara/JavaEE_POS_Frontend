@@ -1,5 +1,6 @@
 import { ItemModel } from "../model/itemModel.js";
 import { setItemCount } from "./indexController.js";
+import { setItemIds } from "./orderController.js";
 
 //item form
 const item_Code = $('#itemCode');
@@ -178,6 +179,7 @@ export const loadItemTable = function () {
                 );
             });
             setItemCount(data.length);
+            setItemIds(data);
         },
         error: function (err) {
             Swal.fire('Something went wrong', '', 'info')

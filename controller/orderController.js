@@ -30,18 +30,13 @@ let cart = [];
 order_id.val(generateOrderId());
 
 //set customer Ids
-export function setCustomerIds() {
+export function setCustomerIds(data) {
     customer_id.empty();
     customer_id.append('<option selected>select the customer</option>');
 
-    let customer_ids = [];
-    customer_db.map((value) => {
-        customer_ids.push(value.customer_id);
-    });
-
-    customer_ids.map((index) => {
+    data.map((customer) => {
         customer_id.append(
-            `<option>${index}</option>`
+            `<option>${customer.customerId}</option>`   
         )
     });
 }
@@ -49,8 +44,20 @@ export function setCustomerIds() {
 //set customer details
 customer_id.on('input', () => {
     if (customer_id.val() !== 'select the customer'){
-        let index = customer_db.findIndex(customer => customer.customer_id === customer_id.val());
-        customer_name.val(customer_db[index].name);
+        $.ajax({
+            type: 'GET',
+            url: 'http://localhost:8080/customer',
+            success: function (data) {
+                data.map((customer) => {
+                    if(customer_id.val() === customer.customerId){
+                        customer_name.val(customer.name);
+                    }
+                })
+            },
+            error: function (err) {
+                Swal.fire('Something went wrong', '', 'info')
+            }
+        });
     }else{
         customer_name.val('');
     }
@@ -61,18 +68,13 @@ const formattedDate = new Date().toISOString().substr(0, 10);
 date.val(formattedDate);
 
 //set item Ids
-export function setItemIds() {
+export function setItemIds(data) {
     item_Id.empty();
     item_Id.append('<option selected>select the item</option>');
 
-    let item_ids = [];
-    item_db.map((value) => {
-        item_ids.push(value.item_code);
-    });
-
-    item_ids.map((index) => {
+    data.map((item) => {
         item_Id.append(
-            `<option>${index}</option>`
+            `<option>${item.itemId}</option>`
         )
     });
 }
@@ -80,10 +82,22 @@ export function setItemIds() {
 //set item details
 item_Id.on('input', () => {
     if (item_Id.val() !== 'select the item'){
-        let index = item_db.findIndex(item => item.item_code === item_Id.val());
-        description.val(item_db[index].description);
-        unit_price.val(item_db[index].unit_price);
-        qty_on_hand.val(item_db[index].qty);
+        $.ajax({
+            type: 'GET',
+            url: 'http://localhost:8080/item',
+            success: function (data) {
+                data.map((item) => {
+                    if(item_Id.val() === item.itemId){
+                        description.val(item.description);
+                        unit_price.val(item.unitPrice);
+                        qty_on_hand.val(item.qty);
+                    }
+                })
+            },
+            error: function (err) {
+                Swal.fire('Something went wrong', '', 'info')
+            }
+        });
     }else{
         description.val('');
         unit_price.val('');
@@ -95,14 +109,14 @@ item_Id.on('input', () => {
 cart_btn.on('click', () => {
     let itemId = item_Id.val();
     let orderQTY = parseInt(order_qty.val());
+    let unitPrice = unit_price.val();
+    let qty = qty_on_hand.val();
 
     if (validate(itemId, 'item id') && validate(orderQTY, 'order qty')) {
 
-        let index = item_db.findIndex(item => item.item_code === itemId);
-        let unitPrice = item_db[index].unit_price;
         let total = unitPrice * orderQTY;
 
-        if (item_db[index].qty >= orderQTY) {
+        if (qty >= orderQTY) {
             let cartItemIndex = cart.findIndex(cartItem => cartItem.itemId === itemId);
             if (cartItemIndex < 0) {
                 let cart_item = {
@@ -138,8 +152,9 @@ order_btn.on('click', () => {
     let customerId = customer_id.val();
     let subTotal = parseFloat(sub_total.text());
     let cashAmount = parseFloat(cash.val());
-    let discountValue = parseFloat(discount.val()) || 0;
-
+    let discountValue = parseInt(discount.val()) || 0;
+    let order_details = [];
+    
     if (validate(orderId, 'order id') && validate(order_date, 'order date') &&
     validate(customerId, 'customer id')) {
         if (cashAmount >= subTotal) {
@@ -151,36 +166,55 @@ order_btn.on('click', () => {
                     denyButtonText: `Don't save`,
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        
+                        let order = new OrderModel(orderId, order_date, discountValue, subTotal, customerId);
 
-                        //save order
-                        let order = new OrderModel(orderId, order_date, customerId, subTotal, discountValue);
-                        order_db.push(order);
-
-                        //save order details
                         cart.forEach((cart_item) => {
-                            let order_detail = new OrderDetailModel(orderId, cart_item.itemId, cart_item.qty, cart_item.unitPrice);
-                            order_details_db.push(order_detail);
-
-                            //update item qty
-                            let index = item_db.findIndex(item => item.item_code === cart_item.itemId);
-                            item_db[index].qty -= cart_item.qty;
+                            let order_detail = new OrderDetailModel(orderId, cart_item.itemId, cart_item.qty);
+                            order_details.push(order_detail);
                         });
 
-                        order_id.val(generateOrderId());
-                        cart.splice(0, cart.length);
-                        loadCart();
-                        clearItemSection();
-                        loadItemTable();
-                        customer_id.val('select the customer');
-                        customer_name.val('');
-                        discount.val('');
-                        cash.val('');
-                        balance.val('');
-                        net_total.text('0/=');
-                        sub_total.text('0/=');
-                        setCounts();
-                        loadOrderTable();
-                        Swal.fire('Order Placed! 🥳', '', 'success');
+                        //save order
+                        $.ajax({
+                            type: 'POST',
+                            url: 'http://localhost:8080/order',
+                            contentType: 'application/json',
+                            data: JSON.stringify(order),
+                            success: function (res) {
+
+                                //save order details
+                                $.ajax({
+                                    type: 'POST',
+                                    url: 'http://localhost:8080/orderDetails',
+                                    contentType: 'application/json',
+                                    data: JSON.stringify(order_details),
+                                    success: function (res) {
+                                        cart.splice(0, cart.length);
+                                        loadCart();
+                                        clearItemSection();
+                                        loadItemTable();
+                                        customer_id.val('select the customer');
+                                        customer_name.val('');
+                                        discount.val('');
+                                        cash.val('');
+                                        balance.val('');
+                                        net_total.text('0/=');
+                                        sub_total.text('0/=');
+                                        Swal.fire('Order Placed! 🥳', '', 'success');
+                                    },
+                                    error: function (err) {
+                                        Swal.fire('Changes are not saved', '', 'info')
+                                    }
+                                });
+
+                            },
+                            error: function (err) {
+                                Swal.fire('Changes are not saved', '', 'info')
+                            }
+                        });
+
+                        // setCounts();
+                        // loadOrderTable();
 
                     } else if (result.isDenied) {
                         Swal.fire('Order is not saved', '', 'info');

@@ -1,5 +1,6 @@
 import { CustomerModel } from "../model/customerModel.js";
 import { setCustomerCount } from "./indexController.js";
+import { setCustomerIds } from "./orderController.js"
 
 //customer form
 const customer_Id = $('#customerId');
@@ -28,6 +29,8 @@ const loadCustomerTable = function () {
                 );
             });
             setCustomerCount(data.length);
+            setCustomerIds(data);
+
         },
         error: function (err) {
             Swal.fire('Something went wrong', '', 'info')
