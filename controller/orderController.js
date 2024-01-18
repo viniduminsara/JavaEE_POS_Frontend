@@ -1,7 +1,5 @@
 import {OrderModel} from "../model/orderModel.js";
-import {customer_db, item_db, order_db, order_details_db} from "../db/db.js";
 import {OrderDetailModel} from "../model/orderDetailModel.js";
-import {setCounts} from "./indexController.js";
 import {loadOrderTable} from "./orderDetailController.js";
 import {loadItemTable} from "./itemController.js";
 
@@ -25,9 +23,6 @@ const cart_btn = $('.cart_btn');
 const order_btn = $('.order_btn');
 
 let cart = [];
-
-//generate orderId
-order_id.val(generateOrderId());
 
 //set customer Ids
 export function setCustomerIds(data) {
@@ -154,7 +149,7 @@ order_btn.on('click', () => {
     let cashAmount = parseFloat(cash.val());
     let discountValue = parseInt(discount.val()) || 0;
     let order_details = [];
-    
+
     if (validate(orderId, 'order id') && validate(order_date, 'order date') &&
     validate(customerId, 'customer id')) {
         if (cashAmount >= subTotal) {
@@ -200,6 +195,7 @@ order_btn.on('click', () => {
                                         balance.val('');
                                         net_total.text('0/=');
                                         sub_total.text('0/=');
+                                        loadOrderTable();
                                         Swal.fire('Order Placed! 🥳', '', 'success');
                                     },
                                     error: function (err) {
@@ -281,40 +277,6 @@ function setBalance(){
 
 cash.on('input', () => setBalance());
 
-//search order
-order_id.on('input', () => {
-    let orderId = order_id.val();
-    let index = order_db.findIndex(order => order.orderId === orderId);
-    if (index >= 0){
-        customer_id.val(order_db[index].customerId);
-        date.val(order_db[index].date);
-
-        cart.splice(0, cart.length);
-        for(let i=0; i<order_details_db.length; i++){
-            if (orderId === order_details_db[i].order_id){
-                let total = order_details_db[i].unit_price * order_details_db[i].qty;
-
-                let cart_item = {
-                    itemId: order_details_db[i].item_id,
-                    unitPrice: order_details_db[i].unit_price,
-                    qty: order_details_db[i].qty,
-                    total: total
-                }
-                cart.push(cart_item);
-            }
-        }
-
-        loadCart();
-    }else if(order_id.val() === ''){
-        order_id.val(generateOrderId());
-        cart.splice(0, cart.length);
-        loadCart();
-        clearItemSection();
-        customer_id.val('select the customer');
-        customer_name.val('');
-    }
-});
-
 function loadCart() {
     $('tbody').eq(2).empty();
     cart.map((item) => {
@@ -353,20 +315,6 @@ function clearItemSection() {
     qty_on_hand.val('');
     unit_price.val('');
     order_qty.val('');
-}
-
-function generateOrderId(){
-    let lastId = 'O-001'; // Default if array is empty
-
-    if (customer_db.length > 0){
-        let lastElement = order_db[order_db.length - 1].orderId;
-        let lastIdParts = lastElement.split('-');
-        let lastNumber = parseInt(lastIdParts[1]);
-
-        lastId = `O-${String(lastNumber + 1).padStart(3, '0')}`;
-    }
-
-    return lastId;
 }
 
 function validate(value, field_name){

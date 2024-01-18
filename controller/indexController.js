@@ -1,5 +1,3 @@
-import {customer_db, item_db, order_db} from "../db/db.js";
-
 // navigation
 
 $('#customer').css('display','none');
@@ -113,12 +111,6 @@ myChart.update();
 
 const count = $('.count');
 
-export function setCounts(){
-    
-    count.eq(1).text(item_db.length);
-    count.eq(2).text(order_db.length);
-}
-
 export function setCustomerCount(cnt){
     count.eq(0).text(cnt);
 }
@@ -130,5 +122,3 @@ export function setItemCount(cnt){
 export function setOrderCount(cnt){
     count.eq(2).text(cnt);
 }
-
-setCounts();
