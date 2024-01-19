@@ -1,4 +1,3 @@
-import { item_db, order_db, order_details_db } from "../db/db.js";
 import { setOrderCount } from "./indexController.js"
 
 const order_id = $('#order_detail_id');
@@ -32,8 +31,6 @@ $('tbody').eq(3).on('click', 'tr', function () {
             Swal.fire('Something went wrong', '', 'info')
         }
     });
-
-    // loadOrderDetails();
 });
 
 //search order
@@ -63,43 +60,39 @@ function loadOrderDetails(order) {
     console.log(order)
     $('tbody').eq(4).empty();
 
-    let orderId = order.orderId;
-    const order_detail = {orderId:orderId}
-
     $.ajax({
         type: 'GET',
         url: 'http://localhost:8080/orderDetails',
-        contentType: 'application/json',
-        data: JSON.stringify(order_detail),
         success: function (data) {
             data.forEach((orderDetail) => {
                 // let total = item.unitPrice * order_details_db[i].qty; // TODO
+                if(orderDetail.orderId === order.orderId){
+                    $.ajax({
+                        type: 'GET',
+                        url: 'http://localhost:8080/item',
+                        success: function (data) {
+                            data.forEach((item) => {
+                                if (item.itemId === orderDetail.itemId) {
+                                     let total = item.unitPrice * orderDetail.qty;
 
-                // $.ajax({
-                //     type: 'GET',
-                //     url: 'http://localhost:8080/item',
-                //     success: function (data) {
-                //         data.forEach((item) => {
-                //             if (item.itemId === orderDetail.itemId) {
-                //                 // let total = item.unitPrice * order_details_db[i].qty; // TODO
+                                    $('tbody').eq(4).append(
+                                        `<tr>
+                                            <th scope="row">${item.itemId}</th>
+                                            <td>${item.description}</td>
+                                            <td>${item.unitPrice}</td>
+                                            <td>${item.qty}</td>
+                                            <td>${total}</td>
+                                        </tr>`
+                                    );
+                                }
+                            })
 
-                //                 $('tbody').eq(4).append(
-                //                     `<tr>
-                //                         <th scope="row">${item.itemId}</th>
-                //                         <td>${item.description}</td>
-                //                         <td>${item.unitPrice}</td>
-                //                         <td>${item.qty}</td>
-                //                         <td>${item.qty}</td>
-                //                     </tr>`
-                //                 );
-                //             }
-                //         })
-
-                //     },
-                //     error: function (err) {
-                //         Swal.fire('Something went wrong', '', 'info')
-                //     }
-                // });
+                        },
+                        error: function (err) {
+                            Swal.fire('Something went wrong', '', 'info')
+                        }
+                    });
+                }
 
             })
 
